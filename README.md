@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Django Timetable Generator 📅
 
 This project is an automated timetable scheduling system built with **Django** and **Google OR-Tools**.  
@@ -96,3 +97,6 @@ to view timetables in grid format.
 
 Will change the UI later👍
 
+=======
+# Updated_timetable
+>>>>>>> 9d19c642fa468efc764133c131552999a2749033
