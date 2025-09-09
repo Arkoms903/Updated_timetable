@@ -143,6 +143,8 @@
                   <span class="faculty">{{ class_info.faculty.name }}</span>
                   <br />
                   <span class="room">Room: {{ class_info.classroom.name }}</span>
+                  <br />
+                  <small>{{ class_info.start_time }} - {{ class_info.end_time }}</small>
                 </div>
               {% else %}
                 <span class="empty-slot">&mdash;</span>
