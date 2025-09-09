@@ -1,9 +1,8 @@
-# scheduler/views.py
 from django.shortcuts import render
 from .models import ScheduledClass, Section
 
-DAYS_OF_WEEK = range(1, 7)
-PERIODS = range(1, 9)
+DAYS_OF_WEEK = range(1, 7)   # Monday - Saturday
+PERIODS = range(1, 9)        # Periods 1 - 8
 
 def view_timetable(request):
     sections = Section.objects.all()
@@ -17,24 +16,26 @@ def view_timetable(request):
         scheduled_classes = ScheduledClass.objects.filter(section_id=selected_section_id).select_related(
             'subject', 'faculty', 'classroom'
         )
-        
+
         # --- DEBUGGING STEP 2 ---
         print(f"[DEBUG] Classes found in database for section {selected_section_id}: {len(scheduled_classes)}")
 
-        # --- Data processing logic ---
-        temp_grid = {} 
-        for day in DAYS_OF_WEEK:
-            temp_grid[day] = {period: None for period in PERIODS}
+        # Build timetable grid (day → period)
+        temp_grid = {day: {period: None for period in PERIODS} for day in DAYS_OF_WEEK}
         for s_class in scheduled_classes:
             if s_class.day in temp_grid and s_class.period in temp_grid[s_class.day]:
                 temp_grid[s_class.day][s_class.period] = s_class
 
-        for period in PERIODS:
-            row_data = {'period_number': period, 'cells': []}
-            for day in DAYS_OF_WEEK:
+        # Build rows (now day-wise, with periods as cells)
+        for day in DAYS_OF_WEEK:
+            row_data = {'day_number': day, 
+                         'day_name': ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][day - 1],
+                         'cells': []
+                        }
+            for period in PERIODS:
                 row_data['cells'].append(temp_grid[day][period])
             table_rows.append(row_data)
-            
+
         # --- DEBUGGING STEP 3 ---
         print(f"[DEBUG] Number of rows prepared for template: {len(table_rows)}")
 
@@ -45,6 +46,7 @@ def view_timetable(request):
         'sections': sections,
         'selected_section_id': int(selected_section_id) if selected_section_id else None,
         'table_rows': table_rows,
-        'day_headers': ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        'day_headers': ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+        'period_headers': [f"Period {p}" for p in PERIODS]
     }
     return render(request, 'scheduler/timetable_display.html', context)

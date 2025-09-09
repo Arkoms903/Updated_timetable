@@ -122,38 +122,39 @@
       </form>
 
       {% if selected_section_id %}
-      <table>
-        <thead>
-          <tr>
-            <th>Period</th>
-            {% for header in day_headers %}
-            <th>{{ header }}</th>
-            {% endfor %}
-          </tr>
-        </thead>
-        <tbody>
-          {% for row in table_rows %}
-          <tr>
-            <td><strong>Period {{ row.period_number }}</strong></td>
-            {% for class_info in row.cells %}
+  <table>
+    <thead>
+      <tr>
+        <th>Day</th>
+        {% for period in period_headers %}
+          <th>{{ period }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in table_rows %}
+        <tr>
+          <td><strong>{{ row.day_name }}</strong></td>
+          {% for class_info in row.cells %}
             <td>
               {% if class_info %}
-              <div class="slot-content">
-                <strong>{{ class_info.subject.name }}</strong>
-                <span class="faculty">{{ class_info.faculty.name }}</span>
-                <br />
-                <span class="room">Room: {{ class_info.classroom.name }}</span>
-              </div>
+                <div class="slot-content">
+                  <strong>{{ class_info.subject.name }}</strong>
+                  <span class="faculty">{{ class_info.faculty.name }}</span>
+                  <br />
+                  <span class="room">Room: {{ class_info.classroom.name }}</span>
+                </div>
               {% else %}
-              <span class="empty-slot">&mdash;</span>
+                <span class="empty-slot">&mdash;</span>
               {% endif %}
             </td>
-            {% endfor %}
-          </tr>
           {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+
       <p
         style="text-align: center; padding: 40px; font-size: 1.1em; color: #777"
       >
