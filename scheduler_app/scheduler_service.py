@@ -1,4 +1,3 @@
-# top of file imports
 import collections
 from ortools.sat.python import cp_model
 from datetime import datetime, timedelta
@@ -8,12 +7,12 @@ from .models import (
     Section, Subject, Faculty
 )
 
-# --- Time & grid constants ---
 DAYS = range(1, 7)
 PERIODS = range(1, 9)
 
-def generate_period_times(start="09:00", duration=45, periods=8):
-    """Generate a dict mapping period numbers to (start_time, end_time) as time objects."""
+
+def generate_period_times(start="10:00", duration=50, periods=8):
+    """Generate dict of period -> (start,end) time."""
     period_times = {}
     start_dt = datetime.strptime(start, "%H:%M")
     for i in range(1, periods + 1):
@@ -24,34 +23,68 @@ def generate_period_times(start="09:00", duration=45, periods=8):
 
 
 class TimetableORToolsSolver:
-    def __init__(self, start_time="09:00", period_duration=45, periods_per_day=8):
-        # load data
+    def __init__(self, start_time="10:00", period_duration=50, periods_per_day=8):
         self.all_sections = list(Section.objects.all())
         self.all_classrooms = list(Classroom.objects.all())
         self.all_faculties = list(Faculty.objects.all())
 
-        # solver
         self.model = cp_model.CpModel()
         self.solver = cp_model.CpSolver()
         self.variables = {}
 
-        # generate period times and store on instance so methods can access it
         self.periods_count = periods_per_day
-        self.period_times = generate_period_times(start=start_time, duration=period_duration, periods=periods_per_day)
+        self.period_times = generate_period_times(
+            start=start_time,
+            duration=period_duration,
+            periods=periods_per_day
+        )
 
-    # ... keep your solve(), _prepare_class_requirements(), _create_variables(), _apply_constraints() as before ...
+        # prepared later
+        self.class_requirements = []
+        self.class_requirements_lookup = {}
+
+    def _prepare_class_requirements(self):
+        """Build requirements list from CourseOfferings and FacultyAssignments."""
+        # TODO: fill this as per your logic
+        # Example entry:
+        # self.class_requirements = [
+        #   {"id": 1, "faculty": fac, "subject": subj, "section": sec,
+        #    "class_type": "THEORY"}
+        # ]
+        self.class_requirements_lookup = {r["id"]: r for r in self.class_requirements}
+
+    def _apply_faculty_hour_constraints(self):
+        """Ensure faculty hours follow their role limits."""
+        for faculty in self.all_faculties:
+            assigned_vars = [
+                var for (req_id, day, period, room_id), var in self.variables.items()
+                if self.class_requirements_lookup[req_id]["faculty"].id == faculty.id
+            ]
+
+            if not assigned_vars:
+                continue
+
+            total_hours = sum(assigned_vars)
+
+            min_h = faculty.min_hours_per_week or 0
+            max_h = faculty.max_hours_per_week or 1000
+
+            self.model.Add(total_hours >= min_h)
+            self.model.Add(total_hours <= max_h)
+
+    def _apply_constraints(self):
+        """Add all timetable constraints."""
+        # existing constraints here...
+        self._apply_faculty_hour_constraints()
 
     def _save_results(self):
-        """Saves the solved timetable from the solver memory into the ScheduledClass database model."""
-        ScheduledClass.objects.all().delete()  # Clear old schedule first
+        ScheduledClass.objects.all().delete()
         new_classes = []
         req_lookup = {r["id"]: r for r in self.class_requirements}
 
         for (req_id, day, period, room_id), var in self.variables.items():
             if self.solver.Value(var) == 1:
                 req_data = req_lookup[req_id]
-
-                # Get start/end times from the instance mapping
                 start_time, end_time = self.period_times[period]
 
                 new_classes.append(ScheduledClass(
@@ -67,4 +100,4 @@ class TimetableORToolsSolver:
                 ))
 
         ScheduledClass.objects.bulk_create(new_classes)
-        print(f"✅ Successfully saved {len(new_classes)} scheduled classes to database.")
+        print(f"✅ Saved {len(new_classes)} classes.")

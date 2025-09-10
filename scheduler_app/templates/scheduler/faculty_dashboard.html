@@ -1,0 +1,29 @@
+{% extends 'scheduler_app/base.html' %}
+{% block title %}Faculty Dashboard{% endblock %}
+{% block content %}
+<h2>Welcome {{ user.username }}</h2>
+<h4>Your Assigned Classes</h4>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Day</th>
+            <th>Period</th>
+            <th>Subject</th>
+            <th>Section</th>
+            <th>Classroom</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cls in timetable %}
+        <tr>
+            <td>{{ cls.day }}</td>
+            <td>{{ cls.period }}</td>
+            <td>{{ cls.subject.name }}</td>
+            <td>{{ cls.section.name }}</td>
+            <td>{{ cls.classroom.name }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

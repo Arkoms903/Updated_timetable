@@ -1,0 +1,31 @@
+{% extends 'scheduler_app/base.html' %}
+{% block title %}Student Dashboard{% endblock %}
+{% block content %}
+<h2>Welcome {{ user.username }}</h2>
+<h4>Your Section: {{ section.name }}</h4>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Day</th>
+            <th>Period</th>
+            <th>Subject</th>
+            <th>Faculty</th>
+            <th>Classroom</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cls in timetable %}
+        <tr>
+            <td>{{ cls.day }}</td>
+            <td>{{ cls.period }}</td>
+            <td>{{ cls.subject.name }}</td>
+            <td>{{ cls.faculty.name }}</td>
+            <td>{{ cls.classroom.name }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'download_student_timetable' %}" class="btn btn-success">Download PDF/Excel</a>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'scheduler_app/base.html' %}
+{% block title %}Timetable{% endblock %}
+{% block content %}
+<h2>Weekly Timetable</h2>
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Day</th>
+                {% for period in periods %}
+                    <th>Period {{ period }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for day, row in timetable.items %}
+            <tr>
+                <td>{{ day }}</td>
+                {% for slot in row %}
+                    <td>
+                        {% if slot %}
+                            {{ slot.subject.name }} <br>
+                            {{ slot.faculty.name }} <br>
+                            Room: {{ slot.classroom.name }}
+                        {% else %}
+                            Free
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

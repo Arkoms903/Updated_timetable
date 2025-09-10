@@ -1,168 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Timetable</title>
-    <style>
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-          Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-        background-color: #f0f2f5; /* Light gray background for the page */
-        margin: 0;
-        padding: 20px;
-      }
-      .container {
-        max-width: 1400px; /* Limits table width, making it "smaller" on large screens */
-        margin: 20px auto; /* Centers the content block */
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        overflow: hidden; /* Ensures border radius applies to table corners */
-      }
-      h1 {
-        text-align: center;
-        color: #333;
-        padding-top: 20px;
-      }
-      .filter-form {
-        text-align: center;
-        padding: 20px;
-        border-bottom: 1px solid #eee;
-      }
-      .filter-form label {
-        font-size: 1.1em;
-        margin-right: 10px;
-        font-weight: 500;
-      }
-      .filter-form select {
-        padding: 10px 15px;
-        font-size: 1em;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        background-color: #fff;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        table-layout: fixed;
-      }
-      th,
-      td {
-        border: 1px solid #e0e0e0;
-        padding: 15px; /* Increased padding for better spacing */
-        text-align: center;
-        height: 110px; /* Cell height */
-        vertical-align: top;
-      }
-      th {
-        background-color: #f9fafb;
-        font-size: 1.1em;
-        color: #444;
-      }
-      tbody tr:nth-child(even) {
-        background-color: #fcfcfc; /* Zebra striping for rows */
-      }
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Timetable</title>
+  <style>
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; vertical-align: top; }
+    th { background: #f4f4f4; text-align: center; }
+    .break-cell { background: #faf3d6; text-align: center; font-weight: bold; }
+    .period-cell { min-height: 60px; }
+    .day-col { width: 140px; font-weight: 600; text-align: left; }
+  </style>
+</head>
+<body>
+  <h2>Timetable</h2>
 
-      /* --- Font Size and Cell Content Styling --- */
-      .slot-content {
-        font-size: 14px; /* Increased base font size for cell content */
-        line-height: 1.6;
-        padding-top: 5px;
-      }
-      .slot-content strong {
-        display: block;
-        font-size: 17px; /* Increased font size for subject name */
-        color: #005a9c;
-        margin-bottom: 5px;
-      }
-      .slot-content .faculty {
-        color: #333;
-        font-style: italic;
-        font-size: 15px; /* Increased faculty font size */
-      }
-      .slot-content .room {
-        color: #2a9d8f;
-        font-weight: 600;
-        margin-top: 5px;
-        display: inline-block;
-      }
-      .empty-slot {
-        color: #bbb;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        font-size: 1.2em;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Class Timetable Viewer</h1>
+  <form method="get">
+    <label for="section">Section:</label>
+    <select name="section_id" id="section" onchange="this.form.submit()">
+      <option value="">-- choose section --</option>
+      {% for sec in sections %}
+        <option value="{{ sec.id }}" {% if selected_section_id == sec.id %}selected{% endif %}>{{ sec }}</option>
+      {% endfor %}
+    </select>
+  </form>
 
-      <form class="filter-form" method="GET" action="">
-        <label for="section_id">Select Section:</label>
-        <select name="section_id" id="section_id" onchange="this.form.submit()">
-          <option value="">--- Choose a Section ---</option>
-          {% for section in sections %}
-          <option
-            value="{{ section.id }}"
-            {%
-            if
-            section.id="selected_section_id"
-            %}selected{%
-            endif
-            %}
-          >
-            {{ section.name }}
-          </option>
-          {% endfor %}
-        </select>
-      </form>
-
-      {% if selected_section_id %}
-  <table>
-    <thead>
-      <tr>
-        <th>Day</th>
-        {% for period in period_headers %}
-          <th>{{ period }}</th>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in table_rows %}
+  {% if table_rows %}
+    <table>
+      <thead>
         <tr>
-          <td><strong>{{ row.day_name }}</strong></td>
-          {% for class_info in row.cells %}
-            <td>
-              {% if class_info %}
-                <div class="slot-content">
-                  <strong>{{ class_info.subject.name }}</strong>
-                  <span class="faculty">{{ class_info.faculty.name }}</span>
-                  <br />
-                  <span class="room">Room: {{ class_info.classroom.name }}</span>
-                  <br />
-                  <small>{{ class_info.start_time }} - {{ class_info.end_time }}</small>
-                </div>
-              {% else %}
-                <span class="empty-slot">&mdash;</span>
-              {% endif %}
-            </td>
+          <th>Day</th>
+          {% for header in period_headers %}
+            <th>{{ header }}</th>
           {% endfor %}
         </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-{% else %}
+      </thead>
+      <tbody>
+        {% for row in table_rows %}
+          <tr>
+            <td class="day-col">{{ row.day_name }}</td>
 
-      <p
-        style="text-align: center; padding: 40px; font-size: 1.1em; color: #777"
-      >
-        Please select a section to view its timetable.
-      </p>
-      {% endif %}
-    </div>
-  </body>
+            {% for cell in row.cells %}
+              {% if cell and cell.break %}
+                <td class="break-cell">
+                  {{ cell.break }}<br>
+                  <small>({{ cell.start_time }} - {{ cell.end_time }})</small>
+                </td>
+              {% elif cell %}
+                <td class="period-cell">
+                  <strong>{{ cell.subject }}</strong><br>
+                  {{ cell.faculty }}<br>
+                  {{ cell.classroom }}<br>
+                  <small>({{ cell.start_time }} - {{ cell.end_time }})</small>
+                </td>
+              {% else %}
+                <td></td>
+              {% endif %}
+            {% endfor %}
+
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Select a section to view the timetable.</p>
+  {% endif %}
+
+</body>
 </html>
